@@ -10,7 +10,7 @@ import nn_utils
 
 
 def dmn_start():
-    print "==> parsing input arguments"
+    print("==> parsing input arguments")
     parser = argparse.ArgumentParser()
     parser.add_argument('--network', type=str, default="dmn_tied", help='embeding size (50, 100, 200, 300 only)')
     parser.add_argument('--word_vector_size', type=int, default=50, help='embeding size (50, 100, 200, 300 only)')
@@ -73,14 +73,14 @@ def dmn_mid(args):
     if args.network == 'dmn_tied':
         import dmn_tied
         if (args.batch_size != 1):
-            print "==> not using minibatch training in this mode"
+            print("==> not using minibatch training in this mode")
             args.batch_size = 1
         dmn = dmn_tied.DMN_tied(**args_dict)
 
     elif args.network == 'dmn_untied':
         import dmn_untied
         if (args.batch_size != 1):
-            print "==> not using minibatch training in this mode"
+            print("==> not using minibatch training in this mode")
             args.batch_size = 1
         dmn = dmn_untied.DMN_untied(**args_dict)
         
@@ -127,28 +127,28 @@ def do_epoch(mode, epoch, skipped=0):
                 cur_time = time.time()
                 #%50 is there so train/test doesn't take up too much terminal screen space 
                 if (i % 50) == 0:
-                    print ("  %sing: %d.%d / %d \t loss: %.3f \t avg_loss: %.3f \t skipped: %d \t %s \t time: %.2fs" % 
+                    print("  %sing: %d.%d / %d \t loss: %.3f \t avg_loss: %.3f \t skipped: %d \t %s \t time: %.2fs" % 
                         (mode, epoch, i * args.batch_size, batches_per_epoch * args.batch_size, 
                         current_loss, avg_loss / (i + 1), skipped, log, cur_time - prev_time))
                 prev_time = cur_time
         
         if np.isnan(current_loss):
-            print "==> current loss IS NaN. This should never happen :) " 
+            print("==> current loss IS NaN. This should never happen :) ") 
             exit()
 
     avg_loss /= batches_per_epoch
-    print "\n  %s loss = %.5f" % (mode, avg_loss)
-    print "confusion matrix:"
-    print metrics.confusion_matrix(y_true, y_pred)
+    print("\n  %s loss = %.5f" % (mode, avg_loss))
+    print("confusion matrix:")
+    print(metrics.confusion_matrix(y_true, y_pred))
     
     accuracy = sum([1 if t == p else 0 for t, p in zip(y_true, y_pred)])
-    print "accuracy: %.2f percent" % (accuracy * 100.0 / batches_per_epoch / args.batch_size)
+    print("accuracy: %.2f percent" % (accuracy * 100.0 / batches_per_epoch / args.batch_size))
     
     return avg_loss, skipped
 
 def dmn_finish(args, network_name, dmn):
     if args.mode == 'train':
-        print "==> training"    
+        print("==> training")    
         skipped = 0
         for epoch in range(args.epochs):
             start_time = time.time()
@@ -164,10 +164,10 @@ def dmn_finish(args, network_name, dmn):
             state_name = 'states/%s.epoch%d.test%.5f.state' % (network_name, epoch, epoch_loss)
             
             if (epoch % args.save_every == 0):    
-                print "==> saving ... %s" % state_name
+                print("==> saving ... %s" % state_name)
                 dmn.save_params(state_name, epoch)
             
-            print "epoch %d took %.3fs" % (epoch, float(time.time()) - start_time)
+            print("epoch %d took %.3fs" % (epoch, float(time.time()) - start_time))
 
     elif args.mode == 'test':
         file = open('last_tested_model.json', 'w+')
