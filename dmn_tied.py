@@ -11,7 +11,7 @@ from theano.compile.nanguardmode import NanGuardMode
 import lasagne
 from lasagne import layers
 from lasagne import nonlinearities
-import cPickle as pickle
+import pickle
 
 from keras.utils.theano_utils import shared_zeros, alloc_zeros_matrix
 
@@ -28,7 +28,7 @@ class DMN_tied:
                 dim, mode, answer_module, input_mask_mode, memory_hops, l2, 
                 normalize_attention, batch_norm, dropout, dropout_in, **kwargs):
 
-        print "==> not used params in DMN class:", kwargs.keys()
+        print("==> not used params in DMN class:", kwargs.keys())
         self.vocab = {None: 0}
         self.ivocab = {0: None}
         
@@ -70,7 +70,7 @@ class DMN_tied:
         self.pe_matrix_q = self.pe_matrix(self.max_q_len)
 
             
-        print "==> building input module"
+        print("==> building input module")
 
         #positional encoder weights
         self.W_pe = nn_utils.normal_param(std=0.1, shape=(self.vocab_size, self.dim))
@@ -110,7 +110,7 @@ class DMN_tied:
 
         self.q_q = self.sum_pos_encodings_q(self.q_var)
                 
-        print "==> creating parameters for memory module"
+        print("==> creating parameters for memory module")
         self.W_mem_res_in = nn_utils.normal_param(std=0.1, shape=(self.dim, self.dim))
         self.W_mem_res_hid = nn_utils.normal_param(std=0.1, shape=(self.dim, self.dim))
         self.b_mem_res = nn_utils.constant_param(value=0.0, shape=(self.dim,))
@@ -129,7 +129,7 @@ class DMN_tied:
         self.b_2 = nn_utils.constant_param(value=0.0, shape=(1,))
 
 
-        print "==> building episodic memory module (fixed number of steps: %d)" % self.memory_hops
+        print("==> building episodic memory module (fixed number of steps: %d)" % self.memory_hops)
         memory = [self.q_q.copy()]
         for iter in range(1, self.memory_hops + 1):
             current_episode = self.new_episode(memory[iter - 1])
@@ -145,7 +145,7 @@ class DMN_tied:
             net = layers.DropoutLayer(net, p=self.dropout)
         last_mem = layers.get_output(net)[0]
         
-        print "==> building answer module"
+        print("==> building answer module")
         self.W_a = nn_utils.normal_param(std=0.1, shape=(self.vocab_size, self.dim))
         
         if self.answer_module == 'feedforward':
@@ -185,7 +185,7 @@ class DMN_tied:
             raise Exception("invalid answer_module")
         
         
-        print "==> collecting all parameters"
+        print("==> collecting all parameters")
         self.params = [self.W_pe,
                   self.W_inp_res_in_fwd, self.W_inp_res_hid_fwd, self.b_inp_res_fwd, 
                   self.W_inp_upd_in_fwd, self.W_inp_upd_hid_fwd, self.b_inp_upd_fwd,
@@ -204,7 +204,7 @@ class DMN_tied:
                               self.W_ans_hid_in, self.W_ans_hid_hid, self.b_ans_hid]
         
         
-        print "==> building loss layer and computing updates"
+        print("==> building loss layer and computing updates")
         self.loss_ce = T.nnet.categorical_crossentropy(self.prediction.dimshuffle('x', 0), 
                                                        T.stack([self.answer_var]))[0]
 
@@ -219,14 +219,14 @@ class DMN_tied:
         
         self.attentions = T.stack(self.attentions)
         if self.mode == 'train':
-            print "==> compiling train_fn"
+            print("==> compiling train_fn")
             self.train_fn = theano.function(inputs=[self.input_var, self.q_var, self.answer_var, self.input_mask_var], 
                                             outputs=[self.prediction, self.loss, self.attentions],
                                             updates=updates,
                                             on_unused_input='warn',
                                             allow_input_downcast=True)
         
-        print "==> compiling test_fn"
+        print("==> compiling test_fn")
         self.test_fn = theano.function(inputs=[self.input_var, self.q_var, self.answer_var, self.input_mask_var],
                                        outputs=[self.prediction, self.loss, self.attentions],
                                        on_unused_input='warn',
@@ -416,7 +416,7 @@ class DMN_tied:
     
     
     def load_state(self, file_name):
-        print "==> loading state %s" % file_name
+        print("==> loading state %s" % file_name)
         with open(file_name, 'r') as load_file:
             dict = pickle.load(load_file)
             loaded_params = dict['params']
@@ -557,7 +557,7 @@ class DMN_tied:
             raise Exception("unknown mode")
    
     def shuffle_train_set(self):
-        print "==> Shuffling the train set"
+        print("==> Shuffling the train set")
         combined = zip(self.train_input, self.train_q, self.train_answer, self.train_input_mask)
         random.shuffle(combined)
         self.train_input, self.train_q, self.train_answer, self.train_input_mask = zip(*combined)    
@@ -603,7 +603,7 @@ class DMN_tied:
     def predict(self, data):
         # data is an array of objects like {"Q": "question", "C": "sentence ."}
         data[0]["A"] = "."
-        print "==> predicting:", data
+        print("==> predicting:", data)
         inputs, questions, answers, input_masks = self._process_input(data)
         probabilities, loss, attentions = self.test_fn(inputs[0], questions[0], answers[0], input_masks[0])
         return probabilities, attentions
